@@ -5,7 +5,7 @@ variable "tags" {
 }
 
 variable "git" {
-  description = "Name of the Git repo"
+  description = "Name of the Git repository"
   type        = string
   default     = "terraform-aws-s3-inventory-report"
 }
