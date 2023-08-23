@@ -14,5 +14,5 @@ data "aws_iam_policy_document" "this" {
 module "this" {
   source              = "../../"
   lambda_policy       = data.aws_iam_policy_document.this.json
-  s3_inventory_bucket = "example"
+  s3_inventory_bucket = "examplebucket"
 }
