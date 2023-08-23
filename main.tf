@@ -6,9 +6,8 @@ locals {
   }
 }
 
-data "archive_file" "lambda_zip" {
-  type             = "zip"
-  output_file_mode = "0666"
-  source_file      = "${path.module}/inventory_report.py"
-  output_path      = "${path.module}/inventory_report.zip"
+module "hash" {
+  source   = "github.com/champ-oss/terraform-git-hash.git?ref=v1.0.12-fc3bb87"
+  path     = "${path.module}/.."
+  fallback = ""
 }
