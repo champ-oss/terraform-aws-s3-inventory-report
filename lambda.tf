@@ -7,7 +7,7 @@ module "cloud_inventory_report" {
   schedule_expression      = var.schedule_expression_inventory
   sync_image               = true
   sync_source_repo         = "champtitles/terraform-aws-s3-inventory"
-  ecr_name                 = "${var.git}-lambda"
+  ecr_name                 = "terraform-aws-s3-inventory"
   ecr_tag                  = module.hash.hash
   enable_custom_iam_policy = false
   timeout                  = 900
