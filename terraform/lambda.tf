@@ -8,7 +8,7 @@ module "cloud_inventory_report" {
   sync_image               = true
   sync_source_repo         = "champtitles/s3-inventory-report"
   ecr_name                 = "s3-inventory-report"
-  ecr_tag                  = var.s3_inventory_report_docker_tag
+  ecr_tag                  = module.hash.hash
   enable_custom_iam_policy = false
   timeout                  = 900
   environment = {
