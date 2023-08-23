@@ -39,7 +39,7 @@ jobs:
 
       - name: Terratest
         if: always()
-        working-directory: terraform/test
+        working-directory: terraform/test/src
         run: |
           export TF_VAR_git=`echo ${GITHUB_REPOSITORY} | sed -e 's|.*/||'`
           go mod download
