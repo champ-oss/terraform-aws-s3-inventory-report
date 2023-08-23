@@ -5,7 +5,7 @@ on:
   push:
 
 env:
-  REPO: champtitles/terraform-aws-s3-inventory-report
+  REPO: champtitles/s3-inventory-report
   SHA: ${{ github.sha }}
   DOCKER_USERNAME: champtitles
   DOCKER_PASSWORD: ${{ secrets.DOCKER_HUB_TOKEN }}

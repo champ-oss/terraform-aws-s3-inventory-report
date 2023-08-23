@@ -19,7 +19,6 @@ module "s3" {
 
 module "this" {
   source              = "../../"
-  git                 = "terraform-aws-s3-inventory-report"
   lambda_policy       = data.aws_iam_policy_document.this.json
   s3_inventory_bucket = module.s3.bucket
 }
