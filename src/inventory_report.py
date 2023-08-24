@@ -16,26 +16,25 @@ s3_client = boto3.client('s3')
 s3_resource = boto3.resource('s3')
 get_s3_bucket = os.getenv("S3_INVENTORY_BUCKET")
 
-today = date.today()
-t_date = today.strftime("%d-%m-%Y")
+t_day = date.today()
+t_date = t_day.strftime("%Y-%m-%d")
 
 
 def get_manifest_files() -> list:
     manifest_file_list = list()
     for manifest_file in s3_client.list_objects(Bucket=get_s3_bucket)['Contents']:
-        if 'json' in manifest_file['Key']:
+        if 'json' in manifest_file['Key'] and t_date in manifest_file['Key']:
             manifest_file_list.append(manifest_file['Key'])
     return manifest_file_list
 
 
-def list_keys(query: str, s3_bucket: str, manifest_key: str):
+def list_keys(s3_bucket: str, manifest_key: str):
     manifest = json.load(s3_resource.Object(s3_bucket, manifest_key).get()['Body'])
     for obj in manifest['files']:
         gzip_obj = s3_resource.Object(bucket_name=s3_bucket, key=obj['key'])
         buffer = gzip.open(gzip_obj.get()["Body"], mode='rt')
         reader = csv.reader(buffer)
-        if query in reader:
-            yield from reader
+        yield from reader
 
 
 def upload_file_s3(source_s3_path: str, destination_s3_path: str, content_type: str) -> None:
@@ -50,20 +49,16 @@ def lambda_handler(event, context):
     for filename in manifest_file_list:
         s3_path = "s3://" + get_s3_bucket + "/" + filename
         url = urllib.parse.urlparse(s3_path)
-        # query everything and report
-        with open(os.path.join('/tmp/', 'complete.csv'), 'a') as file:
-            writer = csv.writer(file, delimiter='\t', lineterminator='\n', )
-            query = ''
-            for bucket, key, *rest in list_keys(query, url.hostname, url.path.lstrip('/')):
+        # create complete and encrypted report
+        with open(os.path.join('/tmp/', 'complete.csv'), 'a') as complete_file, \
+                open(os.path.join('/tmp/', 'encrypted.csv'), 'a') as encrypted_file:
+            complete_writer = csv.writer(complete_file, delimiter='\t', lineterminator='\n', )
+            encrypted_writer = csv.writer(encrypted_file, delimiter='\t', lineterminator='\n', )
+            for bucket, key, *rest in list_keys(url.hostname, url.path.lstrip('/')):
                 row = [bucket, key, *rest]
-                writer.writerow(row)
-        # query everything for only non encrypted objects and report
-        with open(os.path.join('/tmp/', 'encrypted.csv'), 'a') as file:
-            writer = csv.writer(file, delimiter='\t', lineterminator='\n', )
-            query = 'NOT-SSE'
-            for bucket, key, *rest in list_keys(query, url.hostname, url.path.lstrip('/')):
-                row = [bucket, key, *rest]
-                writer.writerow(row)
+                if 'NOT-SSE' in row:
+                    encrypted_writer.writerow(row)
+                complete_writer.writerow(row)
 
     upload_file_s3("/tmp/complete.csv", "report/complete-inventory-report-" + t_date + ".csv", "text/csv")
     upload_file_s3("/tmp/encrypted.csv", "report/encrypted-inventory-report-" + t_date + ".csv", "text/csv")
