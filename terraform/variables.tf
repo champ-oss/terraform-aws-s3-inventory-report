@@ -24,5 +24,5 @@ variable "s3_inventory_bucket" {
 variable "schedule_expression_inventory" {
   description = "event schedule for lambda inventory report"
   type        = string
-  default     = "cron(00 19 ? * * *)" # run daily at 7pm UTC
+  default     = "cron(00 23 ? * * *)" # run daily at 7pm UTC
 }
