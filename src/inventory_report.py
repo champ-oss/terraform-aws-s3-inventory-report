@@ -22,9 +22,12 @@ t_date = t_day.strftime("%Y-%m-%d")
 
 def get_manifest_files() -> list:
     manifest_file_list = list()
-    for manifest_file in s3_client.list_objects(Bucket=get_s3_bucket)['Contents']:
-        if 'json' in manifest_file['Key'] and t_date in manifest_file['Key']:
-            manifest_file_list.append(manifest_file['Key'])
+    try:
+        for manifest_file in s3_client.list_objects(Bucket=get_s3_bucket)['Contents']:
+            if 'json' in manifest_file['Key'] and t_date in manifest_file['Key']:
+                manifest_file_list.append(manifest_file['Key'])
+    except Exception:
+        pass
     return manifest_file_list
 
 
