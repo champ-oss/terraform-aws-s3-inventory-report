@@ -7,7 +7,7 @@ import urllib.parse
 import os
 import logging
 import boto3
-from datetime import date
+from datetime import date,  timedelta
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -17,14 +17,15 @@ s3_resource = boto3.resource('s3')
 get_s3_bucket = os.getenv("S3_INVENTORY_BUCKET")
 
 t_day = date.today()
-t_date = t_day.strftime("%Y-%m-%d")
+yesterday = t_day - timedelta(days=1)
+y_date = yesterday.strftime("%Y-%m-%d")
 
 
 def get_manifest_files() -> list:
     manifest_file_list = list()
     try:
         for manifest_file in s3_client.list_objects(Bucket=get_s3_bucket)['Contents']:
-            if 'json' in manifest_file['Key'] and t_date in manifest_file['Key']:
+            if 'json' in manifest_file['Key'] and y_date in manifest_file['Key']:
                 manifest_file_list.append(manifest_file['Key'])
     except Exception:
         pass
@@ -48,6 +49,7 @@ def upload_file_s3(source_s3_path: str, destination_s3_path: str, content_type: 
 
 
 def lambda_handler(event, context):
+
     manifest_file_list = get_manifest_files()
     for filename in manifest_file_list:
         s3_path = "s3://" + get_s3_bucket + "/" + filename
@@ -63,5 +65,5 @@ def lambda_handler(event, context):
                     encrypted_writer.writerow(row)
                 complete_writer.writerow(row)
 
-    upload_file_s3("/tmp/complete.csv", "report/complete-inventory-report-" + t_date + ".csv", "text/csv")
-    upload_file_s3("/tmp/encrypted.csv", "report/encrypted-inventory-report-" + t_date + ".csv", "text/csv")
+    upload_file_s3("/tmp/complete.csv", "report/complete-inventory-report-" + y_date + ".csv", "text/csv")
+    upload_file_s3("/tmp/encrypted.csv", "report/encrypted-inventory-report-" + y_date + ".csv", "text/csv")
