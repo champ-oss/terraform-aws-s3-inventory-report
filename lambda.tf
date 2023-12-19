@@ -1,5 +1,5 @@
 module "cloud_inventory_report" {
-  source                   = "github.com/champ-oss/terraform-aws-lambda.git?ref=v1.0.119-2052713"
+  source                   = "github.com/champ-oss/terraform-aws-lambda.git?ref=v1.0.135-3a6e821"
   git                      = var.git
   name                     = "s3-inventory-report"
   tags                     = merge(local.tags, var.tags)
