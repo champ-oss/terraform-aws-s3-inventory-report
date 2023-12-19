@@ -26,6 +26,8 @@ env:
   NEW_RELIC_API_KEY: ${{ secrets.NEW_RELIC_API_KEY }}
   NEW_RELIC_REGION: ${{ secrets.NEW_RELIC_REGION }}
   NEW_RELIC_ACCOUNT_ID: ${{ secrets.NEW_RELIC_ACCOUNT_ID }}
+  GITHUB_TOKEN: ${{ secrets.CHAMP_TESTING_GITHUB_TOKEN }}
+  GITHUB_OWNER: "champ-testing"
 
 jobs:
   list-examples:
@@ -107,7 +109,7 @@ jobs:
   module:
     runs-on: ubuntu-latest
     if: always()
-    needs: [ run-example, check-examples ]
+    needs: [run-example, check-examples]
     steps:
       - name: module
         working-directory: .
