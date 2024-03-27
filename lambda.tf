@@ -11,6 +11,7 @@ module "cloud_inventory_report" {
   ecr_tag                  = module.hash.hash
   enable_custom_iam_policy = false
   timeout                  = 900
+  memory_size              = var.memory_size
   environment = {
     S3_INVENTORY_BUCKET = var.s3_inventory_bucket
   }

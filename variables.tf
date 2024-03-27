@@ -26,3 +26,9 @@ variable "schedule_expression_inventory" {
   type        = string
   default     = "cron(00 23 ? * * *)" # run daily at 7pm UTC
 }
+
+variable "memory_size" {
+  description = "https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_function#memory_size"
+  type        = number
+  default     = 512
+}
