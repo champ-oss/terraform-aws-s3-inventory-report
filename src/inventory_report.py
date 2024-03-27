@@ -8,6 +8,7 @@ import os
 import logging
 import boto3
 from datetime import date,  timedelta
+import io
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -43,27 +44,32 @@ def list_keys(s3_bucket: str, manifest_key: str):
 
 def upload_file_s3(source_s3_path: str, destination_s3_path: str, content_type: str) -> None:
     logger.info("uploading file")
-    s3_resource.Bucket(get_s3_bucket).upload_file(source_s3_path,
-                                                  destination_s3_path, ExtraArgs={'ContentType': content_type})
+    s3_resource.Object(get_s3_bucket, destination_s3_path).put(Body=source_s3_path, ContentType=content_type)
     logger.info("uploading file complete")
 
 
 def lambda_handler(event, context):
-
     manifest_file_list = get_manifest_files()
+    complete_output = io.StringIO()
+    encrypted_output = io.StringIO()
     for filename in manifest_file_list:
         s3_path = "s3://" + get_s3_bucket + "/" + filename
         url = urllib.parse.urlparse(s3_path)
         # create complete and encrypted report
-        with open(os.path.join('/tmp/', 'complete.csv'), 'a') as complete_file, \
-                open(os.path.join('/tmp/', 'encrypted.csv'), 'a') as encrypted_file:
-            complete_writer = csv.writer(complete_file, delimiter='\t', lineterminator='\n', )
-            encrypted_writer = csv.writer(encrypted_file, delimiter='\t', lineterminator='\n', )
-            for bucket, key, *rest in list_keys(url.hostname, url.path.lstrip('/')):
-                row = [bucket, key, *rest]
-                if 'NOT-SSE' in row:
-                    encrypted_writer.writerow(row)
-                complete_writer.writerow(row)
+        complete_writer = csv.writer(complete_output, delimiter='\t', lineterminator='\n', )
+        encrypted_writer = csv.writer(encrypted_output, delimiter='\t', lineterminator='\n', )
+        for bucket, key, *rest in list_keys(url.hostname, url.path.lstrip('/')):
+            row = [bucket, key, *rest]
+            if 'NOT-SSE' in row:
+                encrypted_writer.writerow(row)
+            complete_writer.writerow(row)
 
-    upload_file_s3("/tmp/complete.csv", "report/complete-inventory-report-" + y_date + ".csv", "text/csv")
-    upload_file_s3("/tmp/encrypted.csv", "report/encrypted-inventory-report-" + y_date + ".csv", "text/csv")
+    # upload complete report
+    complete_output.seek(0)
+    complete_output_str = complete_output.getvalue()
+    upload_file_s3(complete_output_str, "report/complete-inventory-report-" + y_date + ".csv", "text/csv")
+
+    # upload encrypted report
+    encrypted_output.seek(0)
+    encrypted_output_str = encrypted_output.getvalue()
+    upload_file_s3(encrypted_output_str, "report/encrypted-inventory-report-" + y_date + ".csv", "text/csv")
